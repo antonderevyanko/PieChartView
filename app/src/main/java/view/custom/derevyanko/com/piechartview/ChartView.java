@@ -23,19 +23,20 @@ public final class ChartView extends View {
 
     private static final int DELAY_MILLIS = 20;
 
-    private Paint fillPaint;
-    private Paint whitePaint;
-
     private int outerRad;
     private int innerRad;
     private int centerX, centerY;
 
     List<StaticGraphData> chartGraphs;
     List<DynamicChartData> dynamicCharts;
+
     private RectF oval;
+
     private Paint fullLinePaint;
     private Paint endsPaint;
     private Paint linePaint;
+    private Paint fillPaint;
+    private Paint whitePaint;
 
     private Runnable animator = new Runnable() {
         @Override
@@ -71,7 +72,6 @@ public final class ChartView extends View {
     }
 
     public void applyData(List<ChartData> charts) {
-        long now = AnimationUtils.currentAnimationTimeMillis();
         List<StaticGraphData> staticCharts = createStaticCharts(charts);
         dynamicCharts = new ArrayList<>();
         for (StaticGraphData staticChartGraph : staticCharts) {

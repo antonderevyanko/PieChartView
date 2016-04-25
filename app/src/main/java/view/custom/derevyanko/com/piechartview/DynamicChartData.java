@@ -1,14 +1,12 @@
 package view.custom.derevyanko.com.piechartview;
 
-import android.util.FloatMath;
-
 public final class DynamicChartData {
 
-    /**
-     * Used to compare floats, if the difference is smaller than this, they are
-     * considered equal
-     */
+    /** Used to compare floats, if the difference is smaller than this, they are considered equal */
     private static final float TOLERANCE = 0.01f;
+    /** The amount of springiness that the dynamics has */
+    private static final float SPRIGNESS = 70f;
+    private static final float DAMPING_COEF = 0.30f;
 
     /** The position the dynamics should to be at */
     private float targetProportion;
@@ -22,9 +20,6 @@ public final class DynamicChartData {
     /** The time the last update happened */
     private long lastTime;
 
-    /** The amount of springiness that the dynamics has */
-    private float springiness;
-
     /** The damping that the dynamics has */
     private float damping;
 
@@ -33,8 +28,7 @@ public final class DynamicChartData {
     public DynamicChartData(StaticGraphData staticGraphData) {
         this.staticGraphData = staticGraphData;
         this.targetProportion = staticGraphData.getProportion();
-        this.springiness = 70f;
-        this.damping = (float) (0.30f * 2 * Math.sqrt(springiness));
+        this.damping = (float) (DAMPING_COEF * 2 * Math.sqrt(SPRIGNESS));
     }
 
     public void setPosition(int position, long now) {
@@ -56,7 +50,7 @@ public final class DynamicChartData {
         float dt = Math.min(now - lastTime, 50) / 1000f;
 
         float x = position - targetProportion;
-        float acceleration = -springiness * x - damping * velocity;
+        float acceleration = -SPRIGNESS * x - damping * velocity;
 
         velocity += acceleration * dt;
         position += velocity * dt;
