@@ -8,6 +8,7 @@ import android.graphics.RectF;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,9 @@ public final class ChartView extends View {
     private static final int STROKE_WIDTH = 18;
     private static final int FULL_ANGLE = 90;
     private static final int CIRCLE_WIDTH = 60;
+    private static final int MIN_GRAPH_LENGTH = 5;
+
+    private static final int DELAY_MILLIS = 20;
 
     private Paint fillPaint;
     private Paint whitePaint;
@@ -26,11 +30,30 @@ public final class ChartView extends View {
     private int innerRad;
     private int centerX, centerY;
 
-    List<ChartGraphData> chartGraphs;
+    List<StaticGraphData> chartGraphs;
+    List<DynamicChartData> dynamicCharts;
     private RectF oval;
     private Paint fullLinePaint;
     private Paint endsPaint;
     private Paint linePaint;
+
+    private Runnable animator = new Runnable() {
+        @Override
+        public void run() {
+            boolean needNewFrame = false;
+            long now = AnimationUtils.currentAnimationTimeMillis();
+            for (DynamicChartData dynamics : dynamicCharts) {
+                dynamics.update(now);
+                if (!dynamics.isFinished()) {
+                    needNewFrame = true;
+                }
+            }
+            if (needNewFrame) {
+                postDelayed(this, DELAY_MILLIS);
+            }
+            invalidate();
+        }
+    };
 
     public ChartView(Context context) {
         super(context);
@@ -48,47 +71,57 @@ public final class ChartView extends View {
     }
 
     public void applyData(List<ChartData> charts) {
-        if (charts.isEmpty()) {
-            return;
+        long now = AnimationUtils.currentAnimationTimeMillis();
+        List<StaticGraphData> staticCharts = createStaticCharts(charts);
+        dynamicCharts = new ArrayList<>();
+        for (StaticGraphData staticChartGraph : staticCharts) {
+            dynamicCharts.add(new DynamicChartData(staticChartGraph));
         }
+        invalidate();
+        removeCallbacks(animator);
+        post(animator);
+    }
+
+    private List<StaticGraphData> createStaticCharts(List<ChartData> charts) {
+        List<StaticGraphData> chartGraphs = new ArrayList<>();
         int sum = 0;
         for (ChartData chart : charts) {
             sum = sum + chart.getCount();
         }
         int prevPosition = 0;
         for (ChartData chartData : charts) {
-            ChartGraphData chartGraphData = new ChartGraphData(chartData);
-            chartGraphData.proportion = Math.round(chartData.getCount() * 360 / sum);
-            chartGraphData.startValue = prevPosition;
-            prevPosition = chartGraphData.startValue + chartGraphData.proportion;
-
-            chartGraphData.color = ResourcesCompat.getColor(getResources(), chartData.getColorResId(), null);
-            chartGraphs.add(chartGraphData);
+            StaticGraphData staticGraphData = new StaticGraphData(chartData);
+            staticGraphData.setProportion(Math.round(chartData.getCount() * 360 / sum));
+            // we wan't draw chart which is less then MIN_GRAPH_LENGTH
+            if (staticGraphData.getProportion() > MIN_GRAPH_LENGTH) {
+                staticGraphData.setStartValue(prevPosition);
+                prevPosition = staticGraphData.getStartValue() + staticGraphData.getProportion();
+                staticGraphData.setColor(ResourcesCompat.getColor(getResources(), chartData.getColorResId(), null));
+                chartGraphs.add(staticGraphData);
+            }
         }
-        invalidate();
+        return chartGraphs;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawCircle(centerX, centerY, outerRad, fillPaint);
         canvas.drawCircle(centerX, centerY, innerRad, whitePaint);
-        canvas.drawPoint(centerX, centerY, fillPaint);
-        for (ChartGraphData chartGraph : chartGraphs) {
-            if (chartGraph.proportion > 5) {
-                linePaint.setColor(chartGraph.color);
-                int startAnglePlus = chartGraph.startValue + LINES_MARGIN;
-                if (chartGraph.chartData.isFull()) {
-                    fullLinePaint.setColor(chartGraph.color);
-                    canvas.drawArc(oval, startAnglePlus, chartGraph.proportion - LINES_MARGIN, false, fullLinePaint);
-                } else {
-                    endsPaint.setColor(chartGraph.color);
-                    int endPointPosition = FULL_ANGLE - chartGraph.startValue - chartGraph.proportion;
-                    canvas.drawArc(oval, startAnglePlus, chartGraph.proportion - LINES_MARGIN, false, linePaint);
-                    canvas.drawCircle(getXByAngle(FULL_ANGLE - startAnglePlus),
-                            getYByAngle(FULL_ANGLE - startAnglePlus), STROKE_WIDTH / 2f, endsPaint);
-                    canvas.drawCircle(getXByAngle(endPointPosition), getYByAngle(endPointPosition),
-                            STROKE_WIDTH / 2f, endsPaint);
-                }
+        for (DynamicChartData dynamicGraphData : dynamicCharts) {
+            StaticGraphData staticData = dynamicGraphData.getStaticData();
+            linePaint.setColor(staticData.getColor());
+            int startAnglePlus = staticData.getStartValue() + LINES_MARGIN;
+            if (staticData.getChartData().isFull()) {
+                fullLinePaint.setColor(staticData.getColor());
+                canvas.drawArc(oval, startAnglePlus, dynamicGraphData.getPosition() - LINES_MARGIN, false, fullLinePaint);
+            } else {
+                endsPaint.setColor(staticData.getColor());
+                int endPointPosition = FULL_ANGLE - staticData.getStartValue() - dynamicGraphData.getPosition();
+                canvas.drawArc(oval, startAnglePlus, dynamicGraphData.getPosition() - LINES_MARGIN, false, linePaint);
+                canvas.drawCircle(getXByAngle(FULL_ANGLE - startAnglePlus),
+                        getYByAngle(FULL_ANGLE - startAnglePlus), STROKE_WIDTH / 2f, endsPaint);
+                canvas.drawCircle(getXByAngle(endPointPosition), getYByAngle(endPointPosition),
+                        STROKE_WIDTH / 2f, endsPaint);
             }
         }
     }
@@ -127,7 +160,7 @@ public final class ChartView extends View {
 
         fullLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         fullLinePaint.setStyle(Paint.Style.STROKE);
-        fullLinePaint.setStrokeWidth(CIRCLE_WIDTH);
+        fullLinePaint.setStrokeWidth(CIRCLE_WIDTH - 1);
 
         endsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         endsPaint.setStyle(Paint.Style.FILL);
@@ -139,16 +172,5 @@ public final class ChartView extends View {
 
     private int getCenterRadius() {
         return Math.round(innerRad + (outerRad - innerRad) / 2f);
-    }
-
-    private class ChartGraphData {
-        ChartData chartData;
-        int proportion;
-        int startValue;
-        int color;
-
-        public ChartGraphData(ChartData chartData) {
-            this.chartData = chartData;
-        }
     }
 }
