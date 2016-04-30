@@ -1,4 +1,6 @@
-package view.custom.derevyanko.com.piechartview;
+package view.custom.derevyanko.com.piechartview.entity;
+
+import view.custom.derevyanko.com.piechartview.entity.ChartData;
 
 /**
  * Created by anton on 4/24/16.

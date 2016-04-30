@@ -9,6 +9,9 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.AnimationUtils;
+import view.custom.derevyanko.com.piechartview.entity.ChartData;
+import view.custom.derevyanko.com.piechartview.entity.DynamicChartData;
+import view.custom.derevyanko.com.piechartview.entity.StaticGraphData;
 
 import java.util.ArrayList;
 import java.util.List;
