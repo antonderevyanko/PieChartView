@@ -6,7 +6,7 @@ public final class DynamicChartData {
     private static final float TOLERANCE = 0.01f;
     /** The amount of springiness that the dynamics has */
     private static final float SPRIGNESS = 70f;
-    private static final float DAMPING_COEF = 0.30f;
+    private static final float DAMPING_COEF = 0.45f;
 
     /** The position the dynamics should to be at */
     private float targetProportion;
