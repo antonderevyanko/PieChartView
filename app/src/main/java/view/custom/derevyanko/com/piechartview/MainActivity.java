@@ -3,6 +3,7 @@ package view.custom.derevyanko.com.piechartview;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import view.custom.derevyanko.com.piechartview.entity.ChartData;
 
 import java.util.ArrayList;
 import java.util.Random;

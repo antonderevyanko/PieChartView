@@ -1,4 +1,6 @@
-package view.custom.derevyanko.com.piechartview;
+package view.custom.derevyanko.com.piechartview.entity;
+
+import view.custom.derevyanko.com.piechartview.entity.StaticGraphData;
 
 public final class DynamicChartData {
 

@@ -1,4 +1,4 @@
-package view.custom.derevyanko.com.piechartview;
+package view.custom.derevyanko.com.piechartview.entity;
 
 import android.support.annotation.ColorRes;
 
