@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <TextView
-            android:text="View with static drawing:"
+            android:text="View with static drawing (clickable):"
             android:padding="15dp"
             android:gravity="center"
             android:textAppearance="@android:style/TextAppearance.Medium"
