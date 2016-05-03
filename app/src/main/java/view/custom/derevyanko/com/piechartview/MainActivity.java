@@ -1,6 +1,7 @@
 package view.custom.derevyanko.com.piechartview;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import view.custom.derevyanko.com.piechartview.entity.ChartData;
@@ -20,26 +21,35 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         random = new Random();
         setContentView(R.layout.main);
-        final ChartView chartView = (ChartView) findViewById(R.id.chartView);
+        // static example
+        ChartGraphView staticChartView = (ChartGraphView) findViewById(R.id.staticView);
+        staticChartView.setUseAnimation(false);
+        staticChartView.applyData(getRandomCharts());
+        staticChartView.setOnClickListener(onClickListener);
+        // dynamic example
+        ChartGraphView dynamicChartView = (ChartGraphView) findViewById(R.id.dynamicView);
+        dynamicChartView.setUseAnimation(true); // true by default, by the way
+        dynamicChartView.applyData(getRandomCharts());
+        dynamicChartView.setOnClickListener(onClickListener);
+    }
+
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            final ArrayList<ChartData> charts = getRandomCharts();
+            ((ChartGraphView) view).applyData(charts);
+        }
+    };
+
+    @NonNull
+    private ArrayList<ChartData> getRandomCharts() {
         final ArrayList<ChartData> charts = new ArrayList<>();
-        charts.add(new ChartData(34, R.color.first));
-        charts.add(new ChartData(18, R.color.second, true));
-        charts.add(new ChartData(34, R.color.third));
-        charts.add(new ChartData(6, R.color.fourth));
-        charts.add(new ChartData(78, R.color.fifth));
-        chartView.applyData(charts);
-        chartView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final ArrayList<ChartData> charts = new ArrayList<>();
-                charts.add(new ChartData(getRandomInt(), R.color.first, getRandomBool()));
-                charts.add(new ChartData(getRandomInt(), R.color.second, getRandomBool()));
-                charts.add(new ChartData(getRandomInt(), R.color.third, getRandomBool()));
-                charts.add(new ChartData(getRandomInt(), R.color.fourth, getRandomBool()));
-                charts.add(new ChartData(getRandomInt(), R.color.fifth, getRandomBool()));
-                chartView.applyData(charts);
-            }
-        });
+        charts.add(new ChartData(getRandomInt(), R.color.first, getRandomBool()));
+        charts.add(new ChartData(getRandomInt(), R.color.second, getRandomBool()));
+        charts.add(new ChartData(getRandomInt(), R.color.third, getRandomBool()));
+        charts.add(new ChartData(getRandomInt(), R.color.fourth, getRandomBool()));
+        charts.add(new ChartData(getRandomInt(), R.color.fifth, getRandomBool()));
+        return charts;
     }
 
     private int getRandomInt() {
